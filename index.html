@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Super Abel123 World 3</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#000; font-family: 'Arial Black', Arial, sans-serif; touch-action: none; }
+  #gameWrap { position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; background:radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a12 100%); overflow:hidden; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; box-shadow: 0 0 60px rgba(0,0,0,0.8); border: 3px solid #222; }
+  #canvasStage { position:relative; display:inline-block; line-height:0; max-width:100vw; max-height:100vh; }
+  #canvasStage canvas { max-width:100vw; max-height:100vh; width:auto; height:auto; display:block; }
+  #ui { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+  .hud { position:absolute; top:10px; left:10px; right:10px; display:flex; justify-content:space-between; align-items:flex-start; font-size:14px; color:#fff; text-shadow: 2px 2px 0 #000; pointer-events:none; }
+  .hud-box { background:rgba(0,0,0,0.5); padding:6px 12px; border-radius:8px; border:2px solid rgba(255,255,255,0.3); }
+  .hud-row { display:flex; gap:14px; align-items:center; }
+  #hearts { display:flex; gap:3px; }
+  .heart { width:16px; height:16px; }
+  #powerIcon { width:22px; height:22px; border-radius:4px; }
+  .screen { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(180deg,#5c94fc 0%, #3868c4 60%, #1d3a7a 100%); color:white; text-align:center; pointer-events:all; z-index:50; }
+  .hidden { display:none !important; }
+  h1 { font-size:clamp(28px,7vw,56px); text-shadow: 4px 4px 0 #b00; letter-spacing:2px; margin-bottom:6px; -webkit-text-stroke: 2px #6a0000; }
+  h2 { font-size:clamp(18px,4vw,28px); text-shadow: 2px 2px 0 #000; margin-bottom:20px; }
+  .subtitle { font-size:14px; opacity:0.85; margin-bottom:30px; text-shadow:1px 1px 0 #000; }
+  .btn { font-family: inherit; font-weight:bold; font-size:18px; padding:14px 34px; margin:8px; border-radius:10px; border:3px solid #fff; background:linear-gradient(180deg,#ffcb3d,#f7941d); color:#5a2d00; cursor:pointer; box-shadow:0 5px 0 #a85c00, 0 8px 12px rgba(0,0,0,0.4); text-shadow:none; transition:transform .08s; }
+  .btn:active { transform:translateY(4px); box-shadow:0 1px 0 #a85c00; }
+  .btn.small { font-size:14px; padding:10px 20px; }
+  .btn.red { background:linear-gradient(180deg,#ff5d5d,#d92626); box-shadow:0 5px 0 #7a0000,0 8px 12px rgba(0,0,0,.4); color:#fff; }
+  #levelGrid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:520px; padding:10px; }
+  .lvlBtn { width:80px; height:80px; border-radius:10px; border:3px solid #fff; font-size:22px; font-weight:bold; background:linear-gradient(180deg,#4caf50,#2e7d32); color:#fff; box-shadow:0 4px 0 #1b5e20; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .lvlBtn.locked { background:linear-gradient(180deg,#777,#444); box-shadow:0 4px 0 #222; color:#bbb; cursor:not-allowed; }
+  .lvlBtn .stars { font-size:11px; margin-top:2px; }
+  #touchControls { position:absolute; bottom:0; left:0; width:100%; height:180px; pointer-events:none; z-index:20; display:none; }
+  .tbtn { position:absolute; pointer-events:all; background:rgba(255,255,255,0.18); border:3px solid rgba(255,255,255,0.5); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; color:#fff; font-weight:bold; }
+  #btnLeft { left:14px; bottom:20px; width:64px; height:64px; }
+  #btnRight { left:88px; bottom:20px; width:64px; height:64px; }
+  #btnJump { right:14px; bottom:34px; width:80px; height:80px; }
+  #btnRun { right:104px; bottom:20px; width:60px; height:60px; font-size:14px; }
+  #pauseBtn { position:absolute; top:8px; right:8px; z-index:30; pointer-events:all; background:rgba(0,0,0,0.5); border:2px solid #fff; color:#fff; border-radius:6px; padding:6px 10px; font-size:16px; cursor:pointer; }
+  #musicBtn { position:absolute; top:8px; right:56px; z-index:30; pointer-events:all; background:rgba(0,0,0,0.5); border:2px solid #fff; color:#fff; border-radius:6px; padding:6px 10px; font-size:16px; cursor:pointer; }
+  #sfxBtn { position:absolute; top:8px; right:104px; z-index:30; pointer-events:all; background:rgba(0,0,0,0.5); border:2px solid #fff; color:#fff; border-radius:6px; padding:6px 10px; font-size:16px; cursor:pointer; }
+  #msgOverlay { position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); font-size:clamp(24px,6vw,48px); color:#fff; text-shadow:3px 3px 0 #000; pointer-events:none; z-index:40; opacity:0; transition:opacity .3s; text-align:center; }
+  #storyBox { max-width:600px; font-size:15px; line-height:1.6; background:rgba(0,0,0,0.35); padding:16px 22px; border-radius:10px; margin-bottom:18px; }
+  ::-webkit-scrollbar { display:none; }
+  @media (hover:none) { #touchControls { display:block; } }
+</style>
+</head>
+<body>
+<div id="gameWrap">
+  <div id="canvasStage">
+  <canvas id="game" width="960" height="540"></canvas>
+  <div id="ui">
+    <div class="hud hidden" id="hudBar">
+      <div class="hud-box hud-row">
+        <img id="powerIcon" src="" style="display:none;">
+        <div id="hearts"></div>
+      </div>
+      <div class="hud-box hud-row">
+        <span id="coinCount">🪙 x0</span>
+      </div>
+      <div class="hud-box hud-row">
+        <span id="levelLabel">Level 1</span>
+      </div>
+      <div class="hud-box hud-row">
+        <span id="timeLabel">⏱ 300</span>
+      </div>
+    </div>
+    <div id="msgOverlay"></div>
+    <button id="pauseBtn" class="hidden">⏸</button>
+    <button id="musicBtn" class="hidden">🎵</button>
+    <button id="sfxBtn" class="hidden">🔊</button>
+
+  <!-- TITLE SCREEN -->
+  <div class="screen" id="titleScreen">
+    <h1>🍄 Super Abel123 World 3🍄</h1>
+    <div class="subtitle">Een episch 3D-achtig platform-avontuur — 20 werelden vol gevaar</div>
+    <button class="btn" id="startBtn">▶ SPEEL</button>
+    <button class="btn small" id="howtoBtn">❓ Besturing</button>
+  </div>
+
+  <!-- HOW TO -->
+  <div class="screen hidden" id="howtoScreen">
+    <h2>Besturing</h2>
+    <div id="storyBox">
+      ⬅➡ of A/D — Lopen<br>
+      ⬆ / Spatie / W — Springen (langer indrukken = hoger springen)<br>
+      Shift — Rennen<br>
+      ⬇ / S — Duiken / Buisje in<br>
+      Spring op vijanden om ze te verslaan. Grijp powerups voor speciale krachten.<br>
+      Op mobiel: gebruik de knoppen linksonder/rechtsonder.
+    </div>
+    <button class="btn" id="backFromHowto">Terug</button>
+  </div>
+
+  <!-- LEVEL SELECT -->
+  <div class="screen hidden" id="levelSelectScreen">
+    <h2>Kies je wereld</h2>
+    <div id="levelGrid"></div>
+    <button class="btn small" id="backToTitle" style="margin-top:16px;">Terug naar menu</button>
+  </div>
+
+  <!-- PAUSE -->
+  <div class="screen hidden" id="pauseScreen">
+    <h2>⏸ Pauze</h2>
+    <button class="btn" id="resumeBtn">Doorspelen</button>
+    <button class="btn small" id="restartLevelBtn">Level opnieuw</button>
+    <button class="btn small red" id="quitToMenuBtn">Naar menu</button>
+  </div>
+
+  <!-- LEVEL COMPLETE -->
+  <div class="screen hidden" id="winScreen">
+    <h1 style="-webkit-text-stroke:2px #145214; text-shadow:4px 4px 0 #0a3d0a;">🏁 LEVEL VOLTOOID!</h1>
+    <div id="winStats" class="subtitle"></div>
+    <button class="btn" id="nextLevelBtn">Volgend level ▶</button>
+    <button class="btn small" id="menuFromWinBtn">Levelmenu</button>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="screen hidden" id="loseScreen">
+    <h1 style="-webkit-text-stroke:2px #6a0000;">💀 GAME OVER</h1>
+    <div class="subtitle" id="loseStats"></div>
+    <button class="btn" id="retryBtn">Opnieuw proberen</button>
+    <button class="btn small" id="menuFromLoseBtn">Levelmenu</button>
+  </div>
+
+  <!-- ALL CLEAR -->
+  <div class="screen hidden" id="allClearScreen">
+    <h1>👑 ALLE 20 WERELDEN VEROVERD! 👑</h1>
+    <div class="subtitle">Je bent de ware Plumber King. Gefeliciteerd, kampioen!</div>
+    <button class="btn" id="allClearMenuBtn">Terug naar menu</button>
+  </div>
+
+  <div id="touchControls">
+    <div class="tbtn" id="btnLeft">◀</div>
+    <div class="tbtn" id="btnRight">▶</div>
+    <div class="tbtn" id="btnRun">RUN</div>
+    <div class="tbtn" id="btnJump">⤴</div>
+  </div>
+  </div>
+  </div>
+</div>
+
+<script src="levels.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
